@@ -1,0 +1,415 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Stats Cards -->
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Wallet Balance</h6>
+                        <h3>${{ profile.wallet_balance|floatformat:2 }}</h3>
+                        <small>Available for withdrawal</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-wallet2" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Total Earnings</h6>
+                        <h3>${{ total_earnings|floatformat:2 }}</h3>
+                        <small>{{ growth_percentage }}% growth</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-currency-dollar" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Today's Earnings</h6>
+                        <h3>${{ today_earnings|floatformat:2 }}</h3>
+                        <small>Earned today</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-calendar-day" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Active Investments</h6>
+                        <h3>${{ total_invested|floatformat:2 }}</h3>
+                        <small>{{ active_investments.count }} investments</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Second Row of Stats -->
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Referral Bonus</h6>
+                        <h3>${{ total_referral_bonus|floatformat:2 }}</h3>
+                        <small>{{ referral_count }} referrals</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-gift" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Weekly Earnings</h6>
+                        <h3>${{ weekly_earnings|floatformat:2 }}</h3>
+                        <small>Last 7 days</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-calendar-week" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-dark text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Completed</h6>
+                        <h3>{{ completed_investments.count }}</h3>
+                        <small>Finished investments</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-purple text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-uppercase fw-bold">Pending</h6>
+                        <h3>{{ pending_transactions.count }}</h3>
+                        <small>Transactions</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Active Investments</h5>
+                <span class="badge bg-light text-primary">{{ active_investments.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if active_investments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Plan</th>
+                                <th>Amount</th>
+                                <th>Daily Return</th>
+                                <th>Days Left</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for investment in active_investments %}
+                            <tr>
+                                <td>{{ investment.plan.get_name_display }}</td>
+                                <td>${{ investment.amount|floatformat:2 }}</td>
+                                <td>${{ investment.calculate_daily_earning|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if investment.days_remaining > 7 %}success{% elif investment.days_remaining > 3 %}warning{% else %}danger{% endif %}">
+                                        {{ investment.days_remaining }} days
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="mt-2 text-muted">No active investments yet.</p>
+                    <a href="{% url 'invest' %}" class="btn btn-primary">Make Your First Investment</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-check"></i> Pending Transactions</h5>
+                <span class="badge bg-light text-info">{{ pending_transactions.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if pending_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in pending_transactions %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{% if transaction.transaction_type == 'deposit' %}primary{% elif transaction.transaction_type == 'withdrawal' %}warning{% else %}info{% endif %}">
+                                        {{ transaction.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td>${{ transaction.amount|floatformat:2 }}</td>
+                                <td>{{ transaction.created_at|date:"M d, Y" }}</td>
+                                <td><span class="badge bg-warning">{{ transaction.get_status_display }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="mt-2 text-muted">No pending transactions.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-arrow-up-circle"></i> Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{% if transaction.transaction_type == 'deposit' %}primary{% elif transaction.transaction_type == 'withdrawal' %}warning{% else %}success{% endif %}">
+                                        {{ transaction.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td>${{ transaction.amount|floatformat:2 }}</td>
+                                <td>{{ transaction.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ transaction.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clock-history" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="mt-2 text-muted">No recent transactions.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Upcoming Maturities</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_maturities %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Plan</th>
+                                <th>Amount</th>
+                                <th>Maturity Date</th>
+                                <th>Days Left</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for investment in upcoming_maturities %}
+                            <tr>
+                                <td>{{ investment.plan.get_name_display }}</td>
+                                <td>${{ investment.amount|floatformat:2 }}</td>
+                                <td>{{ investment.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if investment.days_remaining > 3 %}info{% else %}warning{% endif %}">
+                                        {{ investment.days_remaining }} days
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-check" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="mt-2 text-muted">No upcoming maturities.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{% url 'deposit' %}" class="btn btn-primary me-md-2">
+                        <i class="bi bi-plus-circle"></i> Deposit Funds
+                    </a>
+                    <a href="{% url 'invest' %}" class="btn btn-success me-md-2">
+                        <i class="bi bi-graph-up"></i> Make Investment
+                    </a>
+                    <a href="{% url 'withdraw' %}" class="btn btn-warning me-md-2">
+                        <i class="bi bi-wallet2"></i> Withdraw Funds
+                    </a>
+                    <a href="{% url 'referrals' %}" class="btn btn-info">
+                        <i class="bi bi-people"></i> View Referrals
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Your Referral Link</h5>
+            </div>
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="referralLink" value="{{ referral_link }}" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyReferralLink()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                </div>
+                <small class="text-muted">Earn referral bonuses when people sign up using your link.</small>
+                
+                <div class="mt-3">
+                    <h6>Referral Stats:</h6>
+                    <div class="d-flex justify-content-between">
+                        <span>Total Referrals: <strong>{{ referral_count }}</strong></span>
+                        <span>Total Bonus Earned: <strong>${{ total_referral_bonus|floatformat:2 }}</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-card {
+    transition: transform 0.2s;
+}
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+</style>
+
+<script>
+function copyReferralLink() {
+    var copyText = document.getElementById("referralLink");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    
+    // Show notification
+    const button = event.currentTarget;
+    const originalHtml = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHtml;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+</script>
+{% endblock %}

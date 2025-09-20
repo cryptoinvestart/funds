@@ -1,0 +1,77 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4">Investment Plans</h1>
+            <p class="lead">Choose the plan that best fits your investment goals</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        {% for plan in plans %}
+        <div class="col-md-4 mb-4">
+            <div class="card investment-card h-100">
+                <div class="card-header text-white text-center 
+                    {% if plan.name == 'basic' %}bg-primary
+                    {% elif plan.name == 'standard' %}bg-success
+                    {% else %}bg-warning{% endif %}">
+                    <h4 class="my-2">{{ plan.get_name_display }}</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ plan.daily_return }}% Daily</h2>
+                    <p class="card-text">For {{ plan.duration_days }} days</p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">Minimum Deposit: ${{ plan.min_deposit }}</li>
+                        <li class="list-group-item">Daily Returns: {{ plan.daily_return }}%</li>
+                        <li class="list-group-item">Total Return: {{ plan.daily_return|floatformat:2 }}% monthly</li>
+                        <li class="list-group-item">Principal Returned After {{ plan.duration_days }} Days</li>
+                    </ul>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'invest' %}" class="btn 
+                        {% if plan.name == 'basic' %}btn-primary
+                        {% elif plan.name == 'standard' %}btn-success
+                        {% else %}btn-warning{% endif %}">
+                        Invest Now
+                    </a>
+                    {% else %}
+                    <a href="{% url 'register' %}" class="btn 
+                        {% if plan.name == 'basic' %}btn-primary
+                        {% elif plan.name == 'standard' %}btn-success
+                        {% else %}btn-warning{% endif %}">
+                        Get Started
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No investment plans are currently available.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">Investment Terms</h4>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>All investments are subject to admin approval</li>
+                        <li>Daily returns are calculated and credited to your wallet balance</li>
+                        <li>Principal is returned at the end of the investment period</li>
+                        <li>Early withdrawal is not permitted</li>
+                        <li>Referral bonuses are paid quarterly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

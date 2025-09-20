@@ -1,0 +1,196 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-graph-up"></i> Make an Investment</h4>
+                </div>
+                <div class="card-body">
+                    {% if plans %}
+                    <div class="row mb-4">
+                        {% for plan in plans %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card investment-card h-100">
+                                <div class="card-header text-white text-center 
+                                    {% if plan.name == 'basic' %}bg-primary
+                                    {% elif plan.name == 'standard' %}bg-success
+                                    {% else %}bg-warning{% endif %}">
+                                    <h5 class="my-2">{{ plan.get_name_display }}</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <h3 class="card-title">{{ plan.daily_return }}% Daily</h3>
+                                    <p class="card-text">For {{ plan.duration_days }} days</p>
+                                    <ul class="list-group list-group-flush mb-3">
+                                        <li class="list-group-item">Min: ${{ plan.min_deposit }}</li>
+                                        <li class="list-group-item">Daily: {{ plan.daily_return }}%</li>
+                                        <li class="list-group-item">Principal returned after term</li>
+                                    </ul>
+                                    <button type="button" class="btn 
+                                        {% if plan.name == 'basic' %}btn-primary
+                                        {% elif plan.name == 'standard' %}btn-success
+                                        {% else %}btn-warning{% endif %} select-plan"
+                                        data-plan-id="{{ plan.id }}"
+                                        data-plan-name="{{ plan.get_name_display }}"
+                                        data-min-deposit="{{ plan.min_deposit }}"
+                                        data-daily-return="{{ plan.daily_return }}">
+                                        Select Plan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <form method="post" id="investmentForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="selectedPlan" class="form-label">Selected Plan</label>
+                            <input type="text" class="form-control" id="selectedPlan" readonly>
+                            <input type="hidden" name="plan_id" id="planId">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Investment Amount ($)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="50" step="0.01" required>
+                            <div class="form-text">Minimum amount: $<span id="minAmount">50</span></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Expected Daily Return</label>
+                            <div class="alert alert-info">
+                                $<span id="dailyReturn">0.00</span> per day
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Wallet Balance</label>
+                            <div class="alert alert-secondary">
+                                ${{ user.userprofile.wallet_balance|floatformat:2 }} available
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Important:</strong> 
+                            <ul class="mb-0 mt-2">
+                                <li>Your investment will be pending until approved by admin</li>
+                                <li>Daily returns will start after approval</li>
+                                <li>Principal will be returned after {{ plan.duration_days }} days</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send"></i> Confirm Investment
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                        <p class="mt-3 text-muted">No investment plans are currently available.</p>
+                        <a href="{% url 'investment_plans' %}" class="btn btn-primary">View Plans</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const planButtons = document.querySelectorAll('.select-plan');
+    const selectedPlanInput = document.getElementById('selectedPlan');
+    const planIdInput = document.getElementById('planId');
+    const minAmountSpan = document.getElementById('minAmount');
+    const amountInput = document.getElementById('amount');
+    const dailyReturnSpan = document.getElementById('dailyReturn');
+    
+    let selectedPlan = null;
+    
+    // Plan selection
+    planButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            selectedPlan = {
+                id: this.dataset.planId,
+                name: this.dataset.planName,
+                minDeposit: parseFloat(this.dataset.minDeposit),
+                dailyReturn: parseFloat(this.dataset.dailyReturn)
+            };
+            
+            selectedPlanInput.value = selectedPlan.name;
+            planIdInput.value = selectedPlan.id;
+            minAmountSpan.textContent = selectedPlan.minDeposit;
+            amountInput.min = selectedPlan.minDeposit;
+            amountInput.value = selectedPlan.minDeposit;
+            
+            // Calculate initial daily return
+            calculateDailyReturn();
+            
+            // Highlight selected plan
+            planButtons.forEach(btn => {
+                btn.closest('.card').classList.remove('border-primary');
+                btn.closest('.card').classList.remove('border-3');
+            });
+            this.closest('.card').classList.add('border-primary');
+            this.closest('.card').classList.add('border-3');
+        });
+    });
+    
+    // Calculate daily return when amount changes
+    amountInput.addEventListener('input', calculateDailyReturn);
+    
+    function calculateDailyReturn() {
+        if (!selectedPlan) return;
+        
+        const amount = parseFloat(amountInput.value) || 0;
+        if (amount < selectedPlan.minDeposit) {
+            dailyReturnSpan.textContent = '0.00';
+            return;
+        }
+        
+        const dailyReturn = (amount * selectedPlan.dailyReturn) / 100;
+        dailyReturnSpan.textContent = dailyReturn.toFixed(2);
+    }
+    
+    // Form validation
+    document.getElementById('investmentForm').addEventListener('submit', function(e) {
+        if (!selectedPlan) {
+            e.preventDefault();
+            alert('Please select an investment plan first.');
+            return;
+        }
+        
+        const amount = parseFloat(amountInput.value);
+        if (amount < selectedPlan.minDeposit) {
+            e.preventDefault();
+            alert(`Amount must be at least $${selectedPlan.minDeposit} for the selected plan.`);
+            return;
+        }
+        
+        if (amount > parseFloat('{{ user.userprofile.wallet_balance }}')) {
+            e.preventDefault();
+            alert('Insufficient wallet balance. Please deposit funds first.');
+            return;
+        }
+    });
+});
+</script>
+
+<style>
+.investment-card {
+    transition: transform 0.3s;
+}
+.investment-card:hover {
+    transform: translateY(-5px);
+}
+.border-3 {
+    border-width: 3px !important;
+}
+</style>
+{% endblock %}

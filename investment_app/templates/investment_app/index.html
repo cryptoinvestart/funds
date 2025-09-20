@@ -1,0 +1,104 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="row align-items-center py-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold">Invest in Crypto & Earn Daily Returns</h1>
+        <p class="lead">Join thousands of investors earning daily returns on their cryptocurrency investments with our secure platform.</p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3">
+            {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg px-4 me-md-2">Go to Dashboard</a>
+            {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <img src="https://images.unsplash.com/photo-1620336655055-bd87ca8f1370?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="img-fluid rounded" alt="Crypto Investment">
+    </div>
+</div>
+
+<div class="row mt-5 mb-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">Investment Plans</h2>
+    </div>
+    
+    {% for plan in plans %}
+    <div class="col-md-4 mb-4">
+        <div class="card investment-card h-100">
+            <div class="card-header text-white text-center 
+                {% if plan.min_deposit == 50 %}bg-primary
+                {% elif plan.min_deposit == 100 %}bg-success
+                {% else %}bg-warning{% endif %}">
+                <h4 class="my-2">{{ plan.name }}</h4>
+            </div>
+            <div class="card-body text-center">
+                <h2 class="card-title">{{ plan.daily_return }}% Daily</h2>
+                <p class="card-text">For {{ plan.duration_days }} days</p>
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item">Minimum Deposit: ${{ plan.min_deposit }}</li>
+                    <li class="list-group-item">Daily Returns: {{ plan.daily_return }}%</li>
+                    <li class="list-group-item">Total Return: {{ plan.daily_return|floatformat:2 }}% monthly</li>
+                    <li class="list-group-item">Principal Returned After {{ plan.duration_days }} Days</li>
+                </ul>
+                {% if user.is_authenticated %}
+                <a href="{% url 'invest' %}" class="btn 
+                    {% if plan.min_deposit == 50 %}btn-primary
+                    {% elif plan.min_deposit == 100 %}btn-success
+                    {% else %}btn-warning{% endif %}">
+                    Invest Now
+                </a>
+                {% else %}
+                <a href="{% url 'register' %}" class="btn 
+                    {% if plan.min_deposit == 50 %}btn-primary
+                    {% elif plan.min_deposit == 100 %}btn-success
+                    {% else %}btn-warning{% endif %}">
+                    Get Started
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-5 py-5 bg-light rounded">
+    <div class="col-12 text-center mb-4">
+        <h2>Why Choose CryptoInvest?</h2>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+            <i class="bi bi-shield-check" style="font-size: 2rem;"></i>
+        </div>
+        <h4 class="mt-3">Secure Investments</h4>
+        <p>Our platform uses advanced security measures to protect your investments and personal information.</p>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+            <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
+        </div>
+        <h4 class="mt-3">Guaranteed Returns</h4>
+        <p>Earn daily returns on your investments with our carefully designed investment plans.</p>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+            <i class="bi bi-people" style="font-size: 2rem;"></i>
+        </div>
+        <h4 class="mt-3">Referral Program</h4>
+        <p>Earn 2% commission on every deposit made by your referrals. Bonuses paid quarterly.</p>
+    </div>
+</div>
+
+<div class="row mt-5 py-5">
+    <div class="col-md-8 mx-auto text-center">
+        <h2 class="mb-4">Ready to Start Earning?</h2>
+        <p class="lead mb-4">Join thousands of satisfied investors who are already earning daily returns on their crypto investments.</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'invest' %}" class="btn btn-primary btn-lg">Make an Investment</a>
+        {% else %}
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Create Account</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

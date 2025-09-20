@@ -1,0 +1,52 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-wallet2"></i> Withdraw Funds</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Withdrawal requests are processed manually by admin and may take up to 24 hours.
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Wallet Balance</h5>
+                        <h2 class="text-success">${{ profile.wallet_balance|floatformat:2 }}</h2>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Withdrawal Amount ($)</label>
+                        <input type="number" class="form-control" id="amount" name="amount" min="10" step="0.01" required>
+                        <div class="form-text">Minimum withdrawal: $10.00</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="wallet_address" class="form-label">Your Crypto Wallet Address</label>
+                        <input type="text" class="form-control" id="wallet_address" name="wallet_address" required>
+                        <div class="form-text">Enter your cryptocurrency wallet address where you want to receive funds.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Cryptocurrency</label>
+                        <select class="form-select" name="currency">
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="USDT">Tether (USDT)</option>
+                            <option value="USDC">USD Coin (USDC)</option>
+                            <option value="BUSD">Binance USD (BUSD)</option>
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">Request Withdrawal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0"><i class="bi bi-list-check"></i> Admin - Deposit Management</h4>
+            </div>
+            <div class="card-body">
+                <!-- Filters and Search -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="btn-group" role="group">
+                            <a href="?status=all" class="btn btn-outline-primary {% if status_filter == 'all' %}active{% endif %}">All</a>
+                            <a href="?status=pending" class="btn btn-outline-warning {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+                            <a href="?status=processing" class="btn btn-outline-info {% if status_filter == 'processing' %}active{% endif %}">Processing</a>
+                            <a href="?status=confirmed" class="btn btn-outline-success {% if status_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+                            <a href="?status=rejected" class="btn btn-outline-danger {% if status_filter == 'rejected' %}active{% endif %}">Rejected</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="get" class="d-flex">
+                            <input type="text" name="q" class="form-control me-2" placeholder="Search users or transaction hash..." value="{{ search_query }}">
+                            <input type="hidden" name="status" value="{{ status_filter }}">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
+                    </div>
+                </div>
+                
+                {% if deposits %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Network</th>
+                                <th>Amount</th>
+                                <th>Transaction Hash</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deposit in deposits %}
+                            <tr>
+                                <td>{{ deposit.user.username }}</td>
+                                <td>{{ deposit.crypto_wallet.get_network_display }}</td>
+                                <td>${{ deposit.amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if deposit.transaction_hash %}
+                                    <code>{{ deposit.transaction_hash|truncatechars:15 }}</code>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if deposit.status == 'confirmed' %}success
+                                    {% elif deposit.status == 'pending' %}warning
+                                    {% elif deposit.status == 'processing' %}info
+                                    {% elif deposit.status == 'rejected' %}danger
+                                    {% else %}secondary{% endif %}">
+                                        {{ deposit.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ deposit.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'admin_deposit_detail' deposit.id %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i> Review
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if deposits.has_other_pages %}
+                <nav aria-label="Deposit pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if deposits.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ deposits.previous_page_number }}&status={{ status_filter }}&q={{ search_query }}">Previous</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Previous</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% for i in deposits.paginator.page_range %}
+                        {% if deposits.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}&status={{ status_filter }}&q={{ search_query }}">{{ i }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if deposits.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ deposits.next_page_number }}&status={{ status_filter }}&q={{ search_query }}">Next</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="mt-3 text-muted">No deposits found.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

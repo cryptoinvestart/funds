@@ -1,0 +1,70 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="my-2"><i class="bi bi-person-plus"></i> Create Your Account</h4>
+            </div>
+            <div class="card-body p-4">
+                {% if referral_code %}
+                <div class="alert alert-info">
+                    <i class="bi bi-gift"></i> You're joining with a referral code! You'll get special benefits.
+                </div>
+                {% endif %}
+                
+                {% if error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" id="username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" id="email" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password1" class="form-label">Password</label>
+                            <input type="password" name="password1" class="form-control" id="password1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="password2" class="form-label">Confirm Password</label>
+                            <input type="password" name="password2" class="form-control" id="password2" required>
+                        </div>
+                    </div>
+                    
+                    {% if referral_code %}
+                    <input type="hidden" name="referral_code" value="{{ referral_code }}">
+                    {% endif %}
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="terms" required>
+                        <label class="form-check-label" for="terms">
+                            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">Create Account</button>
+                    </div>
+                </form>
+
+                <hr>
+                <div class="text-center">
+                    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

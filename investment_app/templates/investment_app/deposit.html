@@ -1,0 +1,220 @@
+{% extends 'investment_app/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-wallet"></i> Deposit Funds</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    Minimum deposit amount is $50. All deposits require admin confirmation.
+                </div>
+                
+                <form method="post" enctype="multipart/form-data" id="depositForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Cryptocurrency Network</label>
+                        <div class="row">
+                            {% for wallet in crypto_wallets %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="crypto_wallet" id="wallet_{{ wallet.id }}" 
+                                                   value="{{ wallet.id }}" required>
+                                            <label class="form-check-label fw-bold" for="wallet_{{ wallet.id }}">
+                                                {{ wallet.get_network_display }}
+                                            </label>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted d-block">Wallet Address:</small>
+                                            <code class="wallet-address">{{ wallet.wallet_address }}</code>
+                                            <button type="button" class="btn btn-sm btn-outline-primary mt-1 copy-btn" 
+                                                    data-address="{{ wallet.wallet_address }}">
+                                                <i class="bi bi-clipboard"></i> Copy
+                                            </button>
+                                        </div>
+                                        {% if wallet.qr_code %}
+                                        <div class="mt-2 text-center">
+                                            <img src="{{ wallet.qr_code.url }}" alt="QR Code" 
+                                                 class="img-fluid" style="max-height: 150px;">
+                                            <small class="d-block text-muted">Scan QR Code</small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_amount" class="form-label">Amount (USD)</label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                        <div class="text-danger">{{ form.amount.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_transaction_hash" class="form-label">Transaction Hash</label>
+                        {{ form.transaction_hash }}
+                        {% if form.transaction_hash.errors %}
+                        <div class="text-danger">{{ form.transaction_hash.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_screenshot" class="form-label">Payment Proof (Screenshot)</label>
+                        {{ form.screenshot }}
+                        {% if form.screenshot.errors %}
+                        <div class="text-danger">{{ form.screenshot.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Upload a screenshot of your transaction for verification</div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Important:</strong> 
+                        <ul class="mb-0 mt-2">
+                            <li>Send only the selected cryptocurrency to the provided address</li>
+                            <li>Do not send other cryptocurrencies to this address</li>
+                            <li>Transactions may take several minutes to confirm on the network</li>
+                            <li>Admin confirmation typically occurs within 24 hours</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-secondary me-md-2" id="cancelPaymentBtn">
+                            <i class="bi bi-x-circle"></i> Cancel Payment
+                        </button>
+                        <button type="submit" class="btn btn-success" id="paidBtn">
+                            <i class="bi bi-check-circle"></i> Paid
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirm Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you have completed the payment? Once confirmed, your transaction will be submitted for admin approval.</p>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="confirmPaymentCheck">
+                    <label class="form-check-label" for="confirmPaymentCheck">
+                        I confirm that I have sent the payment to the provided address
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Go Back</button>
+                <button type="button" class="btn btn-primary" id="finalSubmitBtn">Confirm Payment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Cancel Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this payment? Any entered information will be lost.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Payment</button>
+                <button type="button" class="btn btn-danger" id="finalCancelBtn">Cancel Payment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Copy wallet address functionality
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const address = this.getAttribute('data-address');
+            navigator.clipboard.writeText(address).then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-check"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    });
+    
+    // Amount validation
+    const amountInput = document.getElementById('id_amount');
+    amountInput.addEventListener('input', function() {
+        if (this.value < 50) {
+            this.setCustomValidity('Minimum deposit amount is $50');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    
+    // Paid button click handler
+    const paidBtn = document.getElementById('paidBtn');
+    const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    
+    paidBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Basic form validation
+        const form = document.getElementById('depositForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        confirmationModal.show();
+    });
+    
+    // Final submit button in modal
+    document.getElementById('finalSubmitBtn').addEventListener('click', function() {
+        const confirmCheck = document.getElementById('confirmPaymentCheck');
+        if (!confirmCheck.checked) {
+            alert('Please confirm that you have sent the payment');
+            return;
+        }
+        
+        // Submit the form
+        document.getElementById('depositForm').submit();
+    });
+    
+    // Cancel button click handler
+    const cancelBtn = document.getElementById('cancelPaymentBtn');
+    const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
+    
+    cancelBtn.addEventListener('click', function() {
+        cancelModal.show();
+    });
+    
+    // Final cancel button in modal
+    document.getElementById('finalCancelBtn').addEventListener('click', function() {
+        // Redirect to a different page or clear the form
+        window.location.href = "{% url 'dashboard' %}";  // Change to your actual dashboard URL
+    });
+});
+</script>
+{% endblock %}
